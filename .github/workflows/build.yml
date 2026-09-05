@@ -17,8 +17,11 @@ jobs:
 
       - name: Descomprimir proyecto
         run: |
+          rm -rf proyecto
+          mkdir proyecto
           unzip -o twitch-clips-app.zip -d proyecto
-          find proyecto -maxdepth 3 -type f | head -50
+          echo "=== Archivos encontrados ==="
+          find proyecto -maxdepth 5 -type f | head -100
 
       - name: Configurar Java
         uses: actions/setup-java@v4
@@ -28,20 +31,21 @@ jobs:
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Corregir compatibilidad Kotlin/Java
-        working-directory: proyecto
-        run: |
-          find . -name "*.gradle" -o -name "*.gradle.kts"
+        with:
+          gradle-version: "8.9"
 
       - name: Compilar APK
         working-directory: proyecto
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace -Pkotlin.jvm.target.validation.mode=ignore
+          gradle assembleDebug --stacktrace -Pkotlin.jvm.target.validation.mode=ignore
+
+      - name: Buscar APK
+        run: |
+          echo "=== APK generados ==="
+          find proyecto -type f -name "*.apk" -print
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
         with:
           name: Twitch-Clips-APK
-          path: proyecto/app/build/outputs/apk/debug/app-debug.apk
+          path: proyecto/app/build/outputs/apk/**/*.apk
